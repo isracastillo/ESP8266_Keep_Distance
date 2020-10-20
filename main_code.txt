@@ -1,0 +1,127 @@
+#include <ArduinoJson.h>
+#include <ESP8266WiFi.h> 
+#include <ESP8266HTTPClient.h>
+
+const char *ssidNode = "KeepDistance";
+const char *passNode = "KeepDistance";
+
+const char *ssidRouter = "my_router_ssid";
+const char *passRouter = "my_router_password"; 
+
+const int buzzerPin = 2;
+
+String macNodePost;
+String macNode;
+String macNodes[] = {"AB:A5:DD","AC:28:C1","37:22:AD"};
+long rssiNode;
+
+String myMac;
+String myMacPost;
+
+String foundNode;
+int networksFound;
+
+const char* serverAddress = "http://18.204.15.102/api/test"; 
+
+boolean arrayIncludeElement(String macNodes[], String macNode) {
+  
+ for (int b = 0; b < 3; b++) {
+  
+    if (macNodePost == macNodes[b]) {
+      
+        if(rssiNode >-45) {
+          return true;                        
+           }
+         }       
+       }
+         return false;
+    } 
+ 
+void AlarmFunction() {
+   
+   tone(buzzerPin,8000,2000); 
+ }
+   
+void PostDataToServer() {
+
+ if(WiFi.status()== WL_CONNECTED){ 
+    
+    Serial.print("Requesting URL: "); 
+    Serial.println(serverAddress); //Post Data  
+    HTTPClient http; 
+    http.begin(serverAddress); 
+    http.addHeader("Content-Type", "application/json"); 
+    StaticJsonDocument<200> doc;
+    doc["a"] = foundNode;
+    doc["b"] = myMacPost;
+    String requestBody;
+    serializeJson(doc, requestBody);  
+    int httpResponseCode = http.POST(requestBody);
+    
+    if(httpResponseCode>0){
+       
+      String response = http.getString();                         
+      Serial.println(httpResponseCode);   
+      Serial.println(response);
+     
+    }
+    
+    else {
+     
+      Serial.printf("Error occurred while sending HTTP POST");
+      Serial.print(httpResponseCode);}
+    
+    http.end();
+    
+       }
+ 
+   else {
+    
+    Serial.print("Error Wifi connecting");
+        }
+   }
+ 
+void ScanResult() {  
+  
+   for (int i = 0; i < networksFound; i++) {
+   
+       macNode = WiFi.BSSIDstr(i);
+       macNodePost = macNode.substring(9);
+       rssiNode = WiFi.RSSI(i);
+       myMac = WiFi.macAddress();
+       myMacPost = myMac.substring(9);
+       
+       if (arrayIncludeElement(macNodes, macNode)){
+                 foundNode = macNodePost; 
+                 Serial.print("  Mantén la distancia! \n");
+                 AlarmFunction();           
+                 PostDataToServer();
+                 break; 
+               }                
+            }
+         }
+
+void setup() {
+  
+  Serial.begin(115200);
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(ssidNode,passNode);
+  delay(500);
+  WiFi.begin(ssidRouter,passRouter);
+  while (WiFi.status() != WL_CONNECTED) 
+    { 
+      delay(500); 
+      Serial.print("."); 
+    } 
+  Serial.println("WiFi connected");
+  pinMode(buzzerPin,OUTPUT);
+
+}
+
+void loop() {
+
+  networksFound = WiFi.scanNetworks();
+  if (networksFound > 0) {
+     ScanResult();
+   }
+}
