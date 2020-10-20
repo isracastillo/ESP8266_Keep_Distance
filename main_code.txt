@@ -1,18 +1,18 @@
-#include <ArduinoJson.h>
-#include <ESP8266WiFi.h> 
+#include <ArduinoJson.h>                      //Library for create an json object and communicate with server
+#include <ESP8266WiFi.h>                      
 #include <ESP8266HTTPClient.h>
 
-const char *ssidNode = "KeepDistance";
-const char *passNode = "KeepDistance";
+const char *ssidNode = "this_ssid_node";
+const char *passNode = "this_password_node";
 
-const char *ssidRouter = "my_router_ssid";
-const char *passRouter = "my_router_password"; 
+const char *ssidRouter = "ssid_router";
+const char *passRouter = "password_router"; 
 
 const int buzzerPin = 2;
 
 String macNodePost;
 String macNode;
-String macNodes[] = {"AB:A5:DD","AC:28:C1","37:22:AD"};
+String macNodes[] = {"BSSID_Node1","BSSID_Node2","BSSID_Node2"}; //For example: NOde 1 has a BSSID (second half of a mac addres) --> AB:A5:DD
 long rssiNode;
 
 String myMac;
